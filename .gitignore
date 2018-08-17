@@ -3,3 +3,9 @@
 */catkin_generated/*
 *.cmake
 */Makefile
+*.py~
+*.launch~
+*.csv~
+*.save
+.gitignore~
+crazyflie_demo/scripts/log/
