@@ -2,13 +2,13 @@
 <launch>
   <arg name="uri2" default="radio://0/80/2M/E7E7E7E702" /> <!--Adjust this parameter-->
   <arg name="uri3" default="radio://0/80/2M/E7E7E7E703" /> <!--Adjust this parameter-->
-  <arg name="frame2" default="crazyflie2" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
-  <arg name="frame3" default="crazyflie3" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
+  <arg name="frame1" default="crazyflie2" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
+  <arg name="frame2" default="crazyflie3" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
   <arg name="ip" default="172.16.1.1" /> <!--Adjust this paramter-->
   <arg name="port" default="3883" />
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch"></include>
 
-  <group ns="crazyflie2">
+  <group ns="$(arg frame1)">
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
       <param name="uri" value="$(arg uri2)" />
       <param name="tf_prefix" value="crazyflie2" />
@@ -25,8 +25,8 @@
         genericLogTopic_log1_Variables: ["stateEstimate.x", "stateEstimate.y", "stateEstimate.z"]
       </rosparam>
     </node>
-    <node name="pose" pkg="crazyflie_demo" type="publish_external_position_vrpn.py" output="screen">
-      <param name="topic" value="/crazyflie2/vrpn_client_node/crazyflie2/pose" />
+    <node name="pose" pkg="crazyflie_demo" type="publish_external_position_vrpn.py" args="$(arg frame1)" output="screen"> 
+      <param name="topic" value="/$(arg frame1)/vrpn_client_node/$(arg frame1)/pose" />
     </node>
     <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
     <rosparam subst_value="true">
@@ -34,7 +34,7 @@
       port: $(arg port)
       update_frequency: 100.0
       frame_id: /world
-      child_frame_id: $(arg frame2)
+      child_frame_id: $(arg frame1)
       use_server_time: false
       broadcast_tf: true
       refresh_tracker_frequency: 1.0
@@ -42,7 +42,7 @@
     </node>
   </group>
 
-  <group ns="crazyflie3">
+  <group ns="$(arg frame2)">
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
       <param name="uri" value="$(arg uri3)" />
       <param name="tf_prefix" value="crazyflie3" />
@@ -59,8 +59,8 @@
         genericLogTopic_log1_Variables: ["stateEstimate.x", "stateEstimate.y", "stateEstimate.z"]
       </rosparam>
     </node>
-    <node name="pose" pkg="crazyflie_demo" type="publish_external_position_vrpn.py" output="screen">
-      <param name="topic" value="/crazyflie3/vrpn_client_node/crazyflie3/pose" />
+    <node name="pose" pkg="crazyflie_demo" type="publish_external_position_vrpn.py" args="$(arg frame2)" output="screen"> 
+      <param name="topic" value="/$(arg frame2)/vrpn_client_node/$(arg frame2)/pose" />
     </node>
     <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
     <rosparam subst_value="true">
@@ -68,13 +68,13 @@
       port: $(arg port)
       update_frequency: 100.0
       frame_id: /world
-      child_frame_id: $(arg frame3)
+      child_frame_id: $(arg frame2)
       use_server_time: false
       broadcast_tf: true
       refresh_tracker_frequency: 0.0
       trackers:
+      - $(arg frame1)
       - $(arg frame2)
-      - $(arg frame3)
     </rosparam>
     </node>
   </group>

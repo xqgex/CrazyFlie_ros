@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="uri" default="radio://0/80/2M/E7E7E7E706" /> <!--Adjust this parameter-->
-  <arg name="frame" default="crazyflie6" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
+  <arg name="uri" default="radio://0/80/2M/E7E7E7E702" /> <!--Adjust this parameter-->
+  <arg name="frame" default="crazyflie2" /> <!--For OptiTrack users: frame name should match the Rigid-body name on Motive-->
   <arg name="ip" default="172.16.1.1" /> <!--Adjust this parameter-->
   <arg name="port" default="3883" />
 
@@ -26,8 +26,8 @@
       </rosparam>
     </node>
 
-   <node name="pose" pkg="crazyflie_demo" type="publish_external_position_vrpn.py" output="screen"> 
-   <param name="topic" value="/$(arg frame)/vrpn_client_node/$(arg frame)/pose" /> <!-- Check name-->
+   <node name="pose" pkg="crazyflie_demo" args="$(arg frame)" type="publish_external_position_vrpn.py" output="screen"> 
+      <param name="topic" value="/$(arg frame)/vrpn_client_node/$(arg frame)/pose" /> <!-- Check name-->
    </node>
 
     <!--Run vrpn client-->

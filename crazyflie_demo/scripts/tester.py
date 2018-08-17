@@ -5,6 +5,7 @@ import numpy as np
 #import keyboard
 from crazyflie_driver.srv import *
 from crazyflie_driver.msg import TrajectoryPolynomialPiece
+import argparse
 
 
 CF_NAMES = ["crazyflie2","crazyflie3"]
@@ -210,12 +211,13 @@ def main4():
 		cf.stop()
 	print "Done"
 	
-def main5():
+def main5(name):
+	
 	signal.signal(signal.SIGINT, signal_handler_old)
 	global cf
 	rospy.init_node('the_new_gofetch')
 	#cf = crazyflie.Crazyflie(CF_NAMES[0], CF_NAMES[0])
-	cf = crazyflie.Crazyflie("crazyflie6","crazyflie6")
+	cf = crazyflie.Crazyflie(name,name)
 	cf.setParam("commander/enHighLevel", 1)
 	print "Starting"
 	traj1 = uav_trajectory.Trajectory()
@@ -256,7 +258,10 @@ def main6():   #Eitan-
 			time.sleep(1.05)
 if __name__ == '__main__':
 	try:
+		parser = argparse.ArgumentParser()
+		parser.add_argument("name")
+		args = parser.parse_args()
 		#get_location()
-		main5()
+		main5(args.name)
 	except Exception as e:
 		print e
