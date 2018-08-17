@@ -4,6 +4,7 @@ import rospy
 import numpy as np
 from crazyflie_driver.srv import *
 from crazyflie_driver.msg import TrajectoryPolynomialPiece
+import tf
 
 def arrayToGeometryPoint(a):
     return geometry_msgs.msg.Point(a[0], a[1], a[2])
@@ -63,8 +64,18 @@ class Crazyflie:
         self.startTrajectoryService(groupMask, trajectoryId, timescale, reverse, relative)
 
     def position(self):
-        self.tf.waitForTransform("/world", "/cf" + str(self.id), rospy.Time(0), rospy.Duration(10))
-        position, quaternion = self.tf.lookupTransform("/world", "/cf" + str(self.id), rospy.Time(0))
+        self.tf.waitForTransform("/world", "/crazyflie" + str(self.id), rospy.Time(0), rospy.Duration(10))
+        position, quaternion = self.tf.lookupTransform("/world", "/crazyflie" + str(self.id), rospy.Time(0))
+        return np.array(position)
+
+    def cfPosition(self):
+        self.tf.waitForTransform("/world", "/crazyflie" + str(self.id) , rospy.Time(0), rospy.Duration(10))
+        position, quaternion = self.tf.lookupTransform("/world", "/crazyflie" + str(self.id), rospy.Time(0))
+        return np.array(position)
+
+    def wandPosition(self):
+        self.tf.waitForTransform("/world", "/wand", rospy.Time(0), rospy.Duration(10))
+        position, quaternion = self.tf.lookupTransform("/world", "/wand", rospy.Time(0))
         return np.array(position)
 
     def getParam(self, name):
