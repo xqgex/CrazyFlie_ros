@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import math, signal, sys, time, os
+import signal, sys, time, os
+from Simulator import crazyflie, rospy
 from tests import *
 
 CF_NAMES = ["crazyflie2","crazyflie3"]
@@ -199,6 +200,11 @@ def main():
 		print("Please enter a valid test name")
 		return 0
 	arguments = " ".join(sys.argv[2:])
+	signal.signal(signal.SIGINT, signal_handler)
+	global CF_LIST
+	for drone_name in arguments:
+		cf = crazyflie.Crazyflie(drone_name, drone_name)
+		CF_LIST.append(cf)
 	os.system(test + " " + arguments)
 	return
 
