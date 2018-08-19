@@ -27,7 +27,6 @@ def onNewTransform(pose):
 
 if __name__ == "__main__":
 	drones = sys.argv[1:-2]
-	drones = ["crazyflie2"] # XXX
 	rospy.init_node("publish_external_position_vrpn", anonymous=True)
 	rospy.loginfo("start with {}".format(drones))
 	topics = []

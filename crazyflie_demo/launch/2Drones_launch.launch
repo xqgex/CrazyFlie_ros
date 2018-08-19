@@ -11,7 +11,7 @@
   <group ns="$(arg frame1)">
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
       <param name="uri" value="$(arg uri2)" />
-      <param name="tf_prefix" value="crazyflie2" />
+      <param name="tf_prefix" value="$(arg frame1)" />
       <param name="enable_logging" value="False" />
       <param name="enable_logging_imu" value="False" />
       <param name="enable_logging_temperature" value="False" />
@@ -25,7 +25,7 @@
         genericLogTopic_log1_Variables: ["stateEstimate.x", "stateEstimate.y", "stateEstimate.z"]
       </rosparam>
     </node>
-    <node name="pose" pkg="crazyflie_demo" type="publish_external_position_vrpn.py" args="$(arg frame1)" output="screen"> 
+    <node name="pose" pkg="crazyflie_demo" type="crazygame_publish_position.py" args="$(arg frame1)" output="screen"> 
       <param name="topic" value="/$(arg frame1)/vrpn_client_node/$(arg frame1)/pose" />
     </node>
     <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
@@ -45,7 +45,7 @@
   <group ns="$(arg frame2)">
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
       <param name="uri" value="$(arg uri3)" />
-      <param name="tf_prefix" value="crazyflie3" />
+      <param name="tf_prefix" value="$(arg frame2)" />
       <param name="enable_logging" value="False" />
       <param name="enable_logging_imu" value="False" />
       <param name="enable_logging_temperature" value="False" />
@@ -59,7 +59,7 @@
         genericLogTopic_log1_Variables: ["stateEstimate.x", "stateEstimate.y", "stateEstimate.z"]
       </rosparam>
     </node>
-    <node name="pose" pkg="crazyflie_demo" type="publish_external_position_vrpn.py" args="$(arg frame2)" output="screen"> 
+    <node name="pose" pkg="crazyflie_demo" type="crazygame_publish_position.py" args="$(arg frame2)" output="screen"> 
       <param name="topic" value="/$(arg frame2)/vrpn_client_node/$(arg frame2)/pose" />
     </node>
     <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
