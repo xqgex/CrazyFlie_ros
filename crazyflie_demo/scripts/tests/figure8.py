@@ -1,18 +1,18 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import sys, time, uav_trajectory
-from Simulator import crazyflie, rospy
+import crazyflie, rospy
 
-
-def figure8(drones):
+def run(drones):
 	rospy.init_node('figure8')
 	cfs = [crazyflie.Crazyflie(drone_name, drone_name) for drone_name in drones]
 	for cf in cfs:
 		cf.setParam("commander/enHighLevel", 1)
 	print("starting")
 	traj1 = uav_trajectory.Trajectory()
-	traj1.loadcsv("takeoff.csv")
+	traj1.loadcsv("./csv/takeoff.csv")
 	traj2 = uav_trajectory.Trajectory()
-	traj2.loadcsv("figure8.csv")
+	traj2.loadcsv("./csv/figure8.csv")
 	print(traj1.duration)
 	for cf in cfs:
 		cf.uploadTrajectory(0, 0, traj1)
@@ -29,5 +29,3 @@ def figure8(drones):
 	for cf in cfs:
 		cf.stop()
 
-
-figure8(sys.argv[1:])
