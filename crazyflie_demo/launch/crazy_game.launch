@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="uri0" default="radio://0/80/2M/E7E7E7E706" />
-  <arg name="frame0" default="crazyflie6" />
-  <arg name="uri1" default="radio://0/80/2M/E7E7E7E707" />
-  <arg name="frame1" default="crazyflie7" />
+  <arg name="uri0" default="radio://0/80/2M/E7E7E7E702" />
+  <arg name="frame0" default="crazyflie2" />
+  <arg name="uri1" default="radio://0/80/2M/E7E7E7E703" />
+  <arg name="frame1" default="crazyflie3" />
   <arg name="ip" default="172.16.1.1" />
   <arg name="port" default="3883" />
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch"></include>
