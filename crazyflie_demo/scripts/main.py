@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import GenerateLaunch, logger, sys
+import GenerateLaunch, logger, os, sys
 cf_logger = logger.get_logger(__name__) # debug(), info(), warning(), error(), exception(), critical()
 
 LAUNCH_FOLDER = "../launch"
@@ -12,9 +12,9 @@ PORT = "3883"
 def main(arguments):
 	if (len(arguments) == 0) or (4 < len(arguments)):
 		cf_logger.error("Invalid call, Usage:")
-		cf_logger.error("python GenerateLaunch.py {[crazyflie0] ..}")
+		cf_logger.error("python main.py {[crazyflie0] ..}")
 		cf_logger.error("For example:")
-		cf_logger.error("python GenerateLaunch.py crazyflie2 crazyflie3")
+		cf_logger.error("python main.py crazyflie2 crazyflie3")
 	elif not GenerateLaunch.generate(LAUNCH_PATH, IP, PORT, arguments):
 		cf_logger.info("Failed to create {}".format(LAUNCH_PATH))
  	else:
