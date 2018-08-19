@@ -1,29 +1,12 @@
 #!/usr/bin/env python
-import signal, sys, time
-import rospy
-import crazyflie
-import uav_trajectory
+import signal, sys, time, uav_trajectory
+from Simulator import crazyflie, rospy
 
 cf = None
 cf2 = None
 DRONE_NAME = "crazyflie2"
 DRONE_NAME2 = "crazyflie3"
 
-def signal_handler(sig, frame):
-	global cf
-	global cf2
-	try:
-		cf.land(targetHeight = 0.0, duration = 1.5)
-		cf.stop()
-	finally:
-		print "Killed {}".format(DRONE_NAME)
-	try:
-		cf2.land(targetHeight = 0.0, duration = 1.5)  Doesn't land him
-		cf2.stop() Doesn't stop him
-	finally:
-		print "Killed {}".format(DRONE_NAME2)
-	print "Ctrl+C pressed"
-	sys.exit(0)
 
 def main():	
 	signal.signal(signal.SIGINT, signal_handler)
@@ -60,8 +43,6 @@ def main():
 if __name__ == '__main__':
 	drones = sys.argv[1:]
 	if len(drones != 2):
-		print "2Drones_figure8.py [crazyflie1] [crazyflie2]"
-	try:
-		main()
-	except Exception as e:
-		print e
+		print "Wrong input format: 2Drones_figure8.py [crazyflie1] [crazyflie2]"
+	main()
+
