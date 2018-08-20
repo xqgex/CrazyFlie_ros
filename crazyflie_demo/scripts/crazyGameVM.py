@@ -34,19 +34,19 @@ KNOWN_CRAZYFLIES = {}
 class CrazyFlieObject(object):
 	def __init__(self, name):
 		self._name = name
-		#self._pos = [x,y]
 		self._status = "Landed"
+		self._move_speed = 1
 		self._listener = tf.TransformListener()
-		self._cf = crazyflie.Crazyflie(name, name)
+		self._cf = crazyflie.Crazyflie(name, self._listener)
 		self._cf.setParam("commander/enHighLevel", 1)
 	def getPosition(self):
 		if self._status == "Landed":
 			return
-		_real_pos,rot = self._listener.lookupTransform("/world", "/{}".format(self._name), rospy.Time(0))
-		if _real_pos[2] < 0.1:
+		real_pos = self._cf.position()
+		if real_pos[2] < 0.1:
 			cf_logger.critical("Drone height too low, Aborting...")
 			self._status = "Landed"
-		return _real_pos
+		return real_pos
 	def getStatus(self):
 		return self._status
 	def takeOff(self):
@@ -61,22 +61,13 @@ class CrazyFlieObject(object):
 		except Exception as e:
 			cf_logger.exception("Failed to stop CrazyFlie")
 		self._status = "Landed"
-	def doMovement(self):
-		target_pos = cell2pos(self._pos)
-		self._cf.goTo(goal=[target_pos[0],target_pos[1],FLIGHT_HEIGHT], yaw=0.0, duration=3, relative=False)
-		time.sleep(3.5)
-		_real_pos,rot = self._listener.lookupTransform("/world", "/{}".format(self._name), rospy.Time(0))
-		cf_logger.info("{} is at ({:.2f},{:.2f},{:.2f}), Should be ({:.2f},{:.2f},{:.2f}), Cell ({},{})".format(self._name,_real_pos[0],_real_pos[1],_real_pos[2],target_pos[0],target_pos[1],FLIGHT_HEIGHT,self._pos[0],self._pos[1]))
 	def goTo(self, x, y):
-		self._pos = [x,y]
-		self.doMovement()
-	def getPos(self):
-		return self._pos
-
-def cell2pos(cell):
-	ret_x = round(WORLD_ORIGIN["X"] + (cell[0]*WORLD_STEPS["X"]),2)
-	ret_y = round(WORLD_ORIGIN["Y"] + (cell[1]*WORLD_STEPS["Y"]),2)
-	return [ret_x,ret_y]
+		self._cf.goTo(goal = [x,y,FLIGHT_HEIGHT], yaw=0.0, duration=1.3, relative=False)
+	def relativeMove(self, x, y):
+		real_x, real_y, real_z = self._cf.position()
+		cf.goTo(goal = [real_x + (x*self._move_speed), real_y + (y*self._move_speed), real_z], yaw=0.0, duration=1.3, relative=False)
+	def setSpeed(self, speed):
+		self._move_speed = speed
 
 #		  0	      1		    2	       3       4     5	     6	      7
 VALID_COMMANDS = ["Register", "UnRegister", "TakeOff", "Land", "UP", "DOWN", "RIGHT", "LEFT"] # Add new commands only at the end!!
@@ -94,6 +85,9 @@ def _get_objects(args): # args = ["GetObjects"]
 			cf_logger.exception("Failed to create CrazyFlie named: {}".format(object_name))
 	# TODO return "FATAL" on error
 	return "$".join(tmp_list)
+
+def _battery_status(args): # args = ["BatteryStatus", "crazyflie"]
+	return "FATAL" # TODO
 
 def _take_off(args): # args = ["TakeOff", "crazyflie"]
 	if (len(args) == 2) and (args[1] in KNOWN_CRAZYFLIES) and (KNOWN_CRAZYFLIES[args[1]].getStatus() == "Landed"):
@@ -114,7 +108,9 @@ def _go_to(args): # args = ["GoTo", "crazyflie", "0', "0"]
 	return
 
 def _move_drone(args): # args = ["MoveDrone", "crazyflie", "0.992350", "0.123456"]
-	pass # TODO
+	if (len(args) == 4) and (args[1] in KNOWN_CRAZYFLIES) and (KNOWN_CRAZYFLIES[args[1]].getStatus() == "Running"):
+		KNOWN_CRAZYFLIES[args[1]].relativeMove(int(args[2]),int(args[3]))
+	return
 
 def _get_position(args): # args = ["GetPos", "crazyflie"]
 	if (len(args) == 2) and (args[1] in KNOWN_CRAZYFLIES) and (KNOWN_CRAZYFLIES[args[1]].getStatus() == "Running"):
@@ -124,11 +120,11 @@ def _get_position(args): # args = ["GetPos", "crazyflie"]
 	else:
 		return
 
-def _battery_status(args): # args = ["BatteryStatus", "crazyflie"]
-	return "FATAL" # TODO
-
-def _set_speed(args): # args = ["SetSpeed"]
-	return "FATAL" # TODO
+def _set_speed(args): # args = ["SetSpeed", "6"]
+	if len(args) == 2:
+		for cf_name, cf_object in KNOWN_CRAZYFLIES.iteritems():
+			cf_object.setSpeed(int(args[1]))
+	return
 
 def _World_size(args): # args = ["WorldSize"]
 	return "{}${}".format(WORLD_CELLS_COUNT["X"], WORLD_CELLS_COUNT["Y"])
@@ -154,7 +150,7 @@ def handleSocket(ip=DEFAULT_LOCAL_IP):
 			data = conn.recv(BUFFER_SIZE)
 			if not data:
 				if KNOWN_CRAZYFLIES: # There are still registered drones
-					for cf_name,cf_object in KNOWN_CRAZYFLIES.iteritems():
+					for cf_name, cf_object in KNOWN_CRAZYFLIES.iteritems():
 						if cf_object.getStatus() == "Running":
 							cf_logger.warning("Emergency landing for {}".format(cf_name))
 							cf_object.land()

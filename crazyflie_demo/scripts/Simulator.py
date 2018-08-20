@@ -19,6 +19,8 @@ class crazyflie(object):
 		return
 	def stop(self):
 		return
+	def position(self):
+		return [1,1,1]
 
 class rospy():
 	@staticmethod
