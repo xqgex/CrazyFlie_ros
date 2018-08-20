@@ -64,8 +64,8 @@ class Crazyflie:
         self.startTrajectoryService(groupMask, trajectoryId, timescale, reverse, relative)
 
     def position(self):
-        self.tf.waitForTransform("/world", "/crazyflie" + str(self.id), rospy.Time(0), rospy.Duration(10))
-        position, quaternion = self.tf.lookupTransform("/world", "/crazyflie" + str(self.id), rospy.Time(0))
+        #self.tf.waitForTransform("/world", "/crazyflie" + str(self.id), rospy.Time(0), rospy.Duration(10))
+        position, quaternion = self.tf.lookupTransform("/world", "/" + str(self.prefix), rospy.Time(0))
         return np.array(position)
 
     def cfPosition(self):

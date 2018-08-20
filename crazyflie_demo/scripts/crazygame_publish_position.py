@@ -32,7 +32,6 @@ if __name__ == "__main__":
 	topics = []
 	for drone in drones:
 		topics.append(rospy.get_param("~topic", "/{0}/vrpn_client_node/{0}/pose".format(drone)))
-	rospy.loginfo("B4 wait")
 	rospy.wait_for_service("update_params")
 	rospy.loginfo("found update_params service")
 	update_params = rospy.ServiceProxy("update_params", UpdateParams)
