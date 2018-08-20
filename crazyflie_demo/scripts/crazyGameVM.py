@@ -36,6 +36,7 @@ class CrazyFlieObject(object):
 		self._name = name
 		self._status = "Landed"
 		self._move_speed = 1
+		self._step_size = 1
 		self._listener = tf.TransformListener()
 		self._cf = crazyflie.Crazyflie(name, self._listener)
 		self._cf.setParam("commander/enHighLevel", 1)
@@ -66,9 +67,11 @@ class CrazyFlieObject(object):
 		self._cf.goTo(goal = [x,y,FLIGHT_HEIGHT], yaw=0.0, duration=1.3, relative=False)
 	def relativeMove(self, x, y):
 		real_x, real_y, real_z = self._cf.position()
-		self._cf.goTo(goal = [real_x + (x*self._move_speed), real_y + (y*self._move_speed), real_z], yaw=0.0, duration=1.3, relative=False)
+		self._cf.goTo(goal = [real_x + (x*self._step_size), real_y + (y*self._step_size), real_z], yaw=0.0, duration=self._move_speed/self._step_size, relative=False)
 	def setSpeed(self, speed):
 		self._move_speed = speed
+	def setStepSize(self, step_size):
+		self._step_size = step_size
 
 def _get_objects(args): # args = ["GetObjects"]
 	# TODO
@@ -126,6 +129,12 @@ def _set_speed(args): # args = ["SetSpeed", "6"]
 	if len(args) == 2:
 		for cf_name, cf_object in KNOWN_CRAZYFLIES.iteritems():
 			cf_object.setSpeed(float(args[1]))
+	return
+
+def _set_step_size(args): # args = ["SetStepSize", "2"]
+	if len(args) == 2:
+		for cf_name, cf_object in KNOWN_CRAZYFLIES.iteritems():
+			cf_object.setStepSize(float(args[1]))
 	return
 
 def _World_size(args): # args = ["WorldSize"]
