@@ -39,9 +39,8 @@ class CrazyFlieObject(object):
 		self._listener = tf.TransformListener()
 		self._cf = crazyflie.Crazyflie(name, self._listener)
 		self._cf.setParam("commander/enHighLevel", 1)
+		self._cf.monitorBattery()
 	def getPosition(self):
-		if self._status == "Landed":
-			return
 		real_pos = self._cf.position()
 		if real_pos[2] < 0.1:
 			cf_logger.critical("Drone height too low, Aborting...")
@@ -49,6 +48,8 @@ class CrazyFlieObject(object):
 		return real_pos
 	def getStatus(self):
 		return self._status
+	def getBattery(self):
+		return self._cf.getBattery()
 	def takeOff(self):
 		self._cf.takeoff(targetHeight=FLIGHT_HEIGHT, duration=3)
 		time.sleep(3.5)
@@ -83,7 +84,12 @@ def _get_objects(args): # args = ["GetObjects"]
 	return "$".join(tmp_list)
 
 def _battery_status(args): # args = ["BatteryStatus", "crazyflie"]
-	return "FATAL" # TODO
+	if (len(args) == 2) and (args[1] in KNOWN_CRAZYFLIES):
+		bat = KNOWN_CRAZYFLIES[args[1]].getBattery()
+		cf_logger.debug("Battery of {} is {}".format(args[1], bat))
+		return bat
+	else:
+		return
 
 def _take_off(args): # args = ["TakeOff", "crazyflie"]
 	if (len(args) == 2) and (args[1] in KNOWN_CRAZYFLIES) and (KNOWN_CRAZYFLIES[args[1]].getStatus() == "Landed"):
@@ -109,7 +115,7 @@ def _move_drone(args): # args = ["MoveDrone", "crazyflie", "0.992350", "0.123456
 	return
 
 def _get_position(args): # args = ["GetPos", "crazyflie"]
-	if (len(args) == 2) and (args[1] in KNOWN_CRAZYFLIES) and (KNOWN_CRAZYFLIES[args[1]].getStatus() == "Running"):
+	if (len(args) == 2) and (args[1] in KNOWN_CRAZYFLIES):
 		pos = KNOWN_CRAZYFLIES[args[1]].getPosition()
 		cf_logger.debug("The position of {} is {}".format(args[1], pos))
 		return "$".join([str(a) for a in pos])
