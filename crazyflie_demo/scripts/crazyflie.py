@@ -30,7 +30,17 @@ class Crazyflie:
         self.startTrajectoryService = rospy.ServiceProxy(prefix + "/start_trajectory", StartTrajectory)
         rospy.wait_for_service(prefix + "/update_params")
         self.updateParamsService = rospy.ServiceProxy(prefix + "/update_params", UpdateParams)
+        self.battery = 0
+        
 
+    def monitorBattery(self):
+        rospy.Subscriber("/" +self.prefix+ "/battery", Float32, batteryInfo)
+        
+    def batteryInfo(self, data):
+        self.battery = ( ( data.data - MIN_BATTERY ) / (MAX_BATTERY - MIN_BATTERY) ) * 100
+        
+    def getBattery(self):
+        return self.battery
 
     def setGroup(self, groupMask):
         self.setGroupMaskService(groupMask)
