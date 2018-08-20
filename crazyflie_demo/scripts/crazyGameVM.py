@@ -44,19 +44,20 @@ class CrazyFlieObject(object):
 		real_pos = self._cf.position()
 		if real_pos[2] < 0.1:
 			cf_logger.critical("Drone height too low, Aborting...")
+			self.land(landing_duration = 0.5)
 			self._status = "Landed"
 		return [real_pos[0] - WORLD_RANGE["X"][0], real_pos[1] - WORLD_RANGE["Y"][0], real_pos[2]]
 	def getStatus(self):
 		return self._status
 	def getBattery(self):
 		return self._cf.getBattery()
-	def takeOff(self):
-		self._cf.takeoff(targetHeight=FLIGHT_HEIGHT, duration=3)
-		time.sleep(3.5)
+	def takeOff(self, takeoff_duration = +):
+		self._cf.takeoff(targetHeight=FLIGHT_HEIGHT, duration=takeoff_duration)
+		time.sleep(takeoff_duration + 0.5)
 		self._status = "Running"
 	def land(self, landing_duration = 1.5):
 		self._cf.land(targetHeight=0.0, duration=landing_duration)
-		time.sleep(landing_duration)
+		time.sleep(landing_duration + 0.5)
 		try:
 			self._cf.stop()
 		except Exception as e:
@@ -89,7 +90,7 @@ def _battery_status(args): # args = ["BatteryStatus", "crazyflie"]
 		cf_logger.debug("Battery of {} is {}".format(args[1], bat))
 		return bat
 	else:
-		return
+		return "FATAL"
 
 def _take_off(args): # args = ["TakeOff", "crazyflie"]
 	if (len(args) == 2) and (args[1] in KNOWN_CRAZYFLIES) and (KNOWN_CRAZYFLIES[args[1]].getStatus() == "Landed"):
@@ -136,7 +137,7 @@ def _World_size(args): # args = ["WorldSize"]
 def handleSocket(ip=DEFAULT_LOCAL_IP):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-	s.bind((ip, DEFAULT_TCP_PORT))	
+	s.bind((ip, DEFAULT_TCP_PORT))
 	s.listen(1) # Accept only one connection at a time
 	while True: # Keep waiting for connection
 		cf_logger.info("Waiting for incoming connection")
@@ -147,11 +148,18 @@ def handleSocket(ip=DEFAULT_LOCAL_IP):
 			break
 		except Exception as e:
 			cf_logger.exception("Exception occurred")
-			break
+			continue
 		cf_logger.info("######################################################")
 		cf_logger.info("New connection from: {}:{}".format(addr[0],addr[1]))
 		while 1:
-			data = conn.recv(DEFAULT_BUFFER_SIZE)
+			try:
+				data = conn.recv(DEFAULT_BUFFER_SIZE)
+			except KeyboardInterrupt:
+				cf_logger.warning("Keyboard Interrupt")
+				break
+			except Exception as e:
+				cf_logger.exception("Exception occurred")
+				continue
 			if not data:
 				if KNOWN_CRAZYFLIES: # There are still registered drones
 					for cf_name, cf_object in KNOWN_CRAZYFLIES.iteritems():
