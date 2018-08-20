@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import rospy
+import rospy, tf
 import numpy as np
 from crazyflie_driver.srv import *
 from crazyflie_driver.msg import TrajectoryPolynomialPiece
-import tf
+from std_msgs.msg import Float32
 
 def arrayToGeometryPoint(a):
     return geometry_msgs.msg.Point(a[0], a[1], a[2])
@@ -31,14 +31,13 @@ class Crazyflie:
         rospy.wait_for_service(prefix + "/update_params")
         self.updateParamsService = rospy.ServiceProxy(prefix + "/update_params", UpdateParams)
         self.battery = 0
-        
 
-    def monitorBattery(self):
-        rospy.Subscriber("/" +self.prefix+ "/battery", Float32, batteryInfo)
-        
     def batteryInfo(self, data):
         self.battery = ( ( data.data - MIN_BATTERY ) / (MAX_BATTERY - MIN_BATTERY) ) * 100
-        
+
+    def monitorBattery(self):
+        rospy.Subscriber("/" +self.prefix+ "/battery", Float32, self.batteryInfo)
+
     def getBattery(self):
         return self.battery
 
