@@ -23,7 +23,6 @@ DEFAULT_WIN_IP = "172.16.1.1"
 DEFAULT_TCP_PORT = 51951
 DEFAULT_BUFFER_SIZE = 1024
 WORLD_RANGE = {"X":[-0.65,1.55], "Y":[-0.8,0.45]}
-WORLD_CELLS_COUNT = {"X":11, "Y":6}
 FLIGHT_HEIGHT = 0.5
 #########################
 
@@ -66,13 +65,13 @@ class CrazyFlieObject(object):
 		self._cf.goTo(goal = [x,y,FLIGHT_HEIGHT], yaw=0.0, duration=1.3, relative=False)
 	def relativeMove(self, x, y):
 		real_x, real_y, real_z = self._cf.position()
-		cf.goTo(goal = [real_x + (x*self._move_speed), real_y + (y*self._move_speed), real_z], yaw=0.0, duration=1.3, relative=False)
+		self._cf.goTo(goal = [real_x + (x*self._move_speed), real_y + (y*self._move_speed), real_z], yaw=0.0, duration=1.3, relative=False)
 	def setSpeed(self, speed):
 		self._move_speed = speed
 
 def _get_objects(args): # args = ["GetObjects"]
 	# TODO
-	tmp_list = ["crazyflie2", "crazyflie3"]# TODO
+	tmp_list = ["crazyflie2"]# TODO
 	# TODO
 	for object_name in tmp_list:
 		try:
@@ -100,13 +99,13 @@ def _land(args): # args = ["Land", "crazyflie"]
 
 def _go_to(args): # args = ["GoTo", "crazyflie", "0', "0"]
 	if (len(args) == 4) and (args[1] in KNOWN_CRAZYFLIES) and (KNOWN_CRAZYFLIES[args[1]].getStatus() == "Running"):
-		cf_logger.debug("Tell {} go to ({},{})".format(args[1],int(args[2]),int(args[3])))
-		KNOWN_CRAZYFLIES[args[1]].goTo(int(args[2]),int(args[3]))
+		cf_logger.debug("Tell {} go to ({},{})".format(args[1],float(args[2]),float(args[3])))
+		KNOWN_CRAZYFLIES[args[1]].goTo(float(args[2]),float(args[3]))
 	return
 
 def _move_drone(args): # args = ["MoveDrone", "crazyflie", "0.992350", "0.123456"]
 	if (len(args) == 4) and (args[1] in KNOWN_CRAZYFLIES) and (KNOWN_CRAZYFLIES[args[1]].getStatus() == "Running"):
-		KNOWN_CRAZYFLIES[args[1]].relativeMove(int(args[2]),int(args[3]))
+		KNOWN_CRAZYFLIES[args[1]].relativeMove(float(args[2]),float(args[3]))
 	return
 
 def _get_position(args): # args = ["GetPos", "crazyflie"]
@@ -120,7 +119,7 @@ def _get_position(args): # args = ["GetPos", "crazyflie"]
 def _set_speed(args): # args = ["SetSpeed", "6"]
 	if len(args) == 2:
 		for cf_name, cf_object in KNOWN_CRAZYFLIES.iteritems():
-			cf_object.setSpeed(int(args[1]))
+			cf_object.setSpeed(float(args[1]))
 	return
 
 def _World_size(args): # args = ["WorldSize"]
@@ -172,7 +171,7 @@ def handleSocket(ip=DEFAULT_LOCAL_IP):
 
 def main():
 	rospy.init_node("the_new_gofetch")
-	handleSocket()#ip=DEFAULT_WIN_IP) # TODO
+	handleSocket(ip=DEFAULT_WIN_IP)
 
 if __name__ == "__main__":
 	cf_logger.info("######################################################")
