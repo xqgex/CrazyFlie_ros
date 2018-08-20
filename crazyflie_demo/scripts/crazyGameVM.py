@@ -45,7 +45,7 @@ class CrazyFlieObject(object):
 		if real_pos[2] < 0.1:
 			cf_logger.critical("Drone height too low, Aborting...")
 			self._status = "Landed"
-		return real_pos
+		return [real_pos[0] - WORLD_RANGE["X"][0], real_pos[1] - WORLD_RANGE["Y"][0], real_pos[2]]
 	def getStatus(self):
 		return self._status
 	def getBattery(self):
