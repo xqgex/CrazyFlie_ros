@@ -64,7 +64,7 @@ class CrazyFlieObject(object):
 			cf_logger.exception("Failed to stop CrazyFlie")
 		self._status = "Landed"
 	def goTo(self, x, y):
-		self._cf.goTo(goal = [x,y,FLIGHT_HEIGHT], yaw=0.0, duration=1.3, relative=False)
+		self._cf.goTo(goal = [x,y,FLIGHT_HEIGHT], yaw=0.0, duration=self._move_speed/self._step_size, relative=False)
 	def relativeMove(self, x, y):
 		real_x, real_y, real_z = self._cf.position()
 		self._cf.goTo(goal = [real_x + (x*self._step_size), real_y + (y*self._step_size), real_z], yaw=0.0, duration=self._move_speed/self._step_size, relative=False)
