@@ -19,17 +19,18 @@ except:
 
 ##### Editable part #####
 DEFAULT_LOCAL_IP = "127.0.0.1"
-DEFAULT_WIN_IP = "172.16.1.2"
-TCP_PORT = 51951
-BUFFER_SIZE = 1024
+DEFAULT_WIN_IP = "172.16.1.1"
+DEFAULT_TCP_PORT = 51951
+DEFAULT_BUFFER_SIZE = 1024
 WORLD_RANGE = {"X":[-0.65,1.55], "Y":[-0.8,0.45]}
 WORLD_CELLS_COUNT = {"X":11, "Y":6}
 FLIGHT_HEIGHT = 0.5
 #########################
 
-WORLD_STEPS = {"X":-1, "Y":-1} # Will be automaticly generated based on "WORLD_RANGE" and "WORLD_CELLS_COUNT"
-WORLD_ORIGIN = {"X":-1, "Y":-1} # Will be automaticly generated
 KNOWN_CRAZYFLIES = {}
+VALID_COMMANDS = {"TakeOff": "_take_off",	"GetObjects": "_get_objects",	"BatteryStatus": "_battery_status",
+		  "GoTo": "_go_to",		"MoveDrone": "_move_drone",	"GetPos": "_get_position",
+		  "Land": "_land",		"WorldSize": "_World_size",	"SetSpeed": "_set_speed"}
 
 class CrazyFlieObject(object):
 	def __init__(self, name):
@@ -68,10 +69,6 @@ class CrazyFlieObject(object):
 		cf.goTo(goal = [real_x + (x*self._move_speed), real_y + (y*self._move_speed), real_z], yaw=0.0, duration=1.3, relative=False)
 	def setSpeed(self, speed):
 		self._move_speed = speed
-
-#		  0	      1		    2	       3       4     5	     6	      7
-VALID_COMMANDS = ["Register", "UnRegister", "TakeOff", "Land", "UP", "DOWN", "RIGHT", "LEFT"] # Add new commands only at the end!!
-VALID_COMMANDS = {"TakeOff": "_take_off", "GetObjects": "_get_objects", "Land": "_land", "GoTo": "_go_to", "MoveDrone": "_move_drone", "GetPos": "_get_position", "BatteryStatus": "_battery_status", "WorldSize": "_World_size", "SetSpeed": "_set_speed"}
 
 def _get_objects(args): # args = ["GetObjects"]
 	# TODO
@@ -127,12 +124,14 @@ def _set_speed(args): # args = ["SetSpeed", "6"]
 	return
 
 def _World_size(args): # args = ["WorldSize"]
-	return "{}${}".format(WORLD_CELLS_COUNT["X"], WORLD_CELLS_COUNT["Y"])
+	size_x = WORLD_RANGE["X"][1] - WORLD_RANGE["X"][0]
+	size_y = WORLD_RANGE["Y"][1] - WORLD_RANGE["Y"][0]
+	return "{}${}".format(size_x, size_y)
 
 def handleSocket(ip=DEFAULT_LOCAL_IP):
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-	s.bind((ip, TCP_PORT))	
+	s.bind((ip, DEFAULT_TCP_PORT))	
 	s.listen(1) # Accept only one connection at a time
 	while True: # Keep waiting for connection
 		cf_logger.info("Waiting for incoming connection")
@@ -147,7 +146,7 @@ def handleSocket(ip=DEFAULT_LOCAL_IP):
 		cf_logger.info("######################################################")
 		cf_logger.info("New connection from: {}:{}".format(addr[0],addr[1]))
 		while 1:
-			data = conn.recv(BUFFER_SIZE)
+			data = conn.recv(DEFAULT_BUFFER_SIZE)
 			if not data:
 				if KNOWN_CRAZYFLIES: # There are still registered drones
 					for cf_name, cf_object in KNOWN_CRAZYFLIES.iteritems():
@@ -172,10 +171,6 @@ def handleSocket(ip=DEFAULT_LOCAL_IP):
 		conn.close()
 
 def main():
-	WORLD_STEPS["X"] = round(abs(WORLD_RANGE["X"][1]-WORLD_RANGE["X"][0])/WORLD_CELLS_COUNT["X"],2) # X
-	WORLD_STEPS["Y"] = round(abs(WORLD_RANGE["Y"][1]-WORLD_RANGE["Y"][0])/WORLD_CELLS_COUNT["Y"],2) # Y
-	WORLD_ORIGIN["X"] = min(WORLD_RANGE["X"][0],WORLD_RANGE["X"][1])
-	WORLD_ORIGIN["Y"] = min(WORLD_RANGE["Y"][0],WORLD_RANGE["Y"][1])
 	rospy.init_node("the_new_gofetch")
 	handleSocket()#ip=DEFAULT_WIN_IP) # TODO
 
