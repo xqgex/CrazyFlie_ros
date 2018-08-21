@@ -19,6 +19,9 @@ def main(arguments):
 		cf_logger.info("Failed to create {}".format(LAUNCH_PATH))
  	else:
 		cf_logger.info("File {} created successfully".format(LAUNCH_PATH))
+		with open("inventory.txt", 'w+') as f:
+			f.write(len(arguments))
+		f.close()
 		os.system("roslaunch crazyflie_demo {}".format(LAUNCH_FILE))
 
 if __name__ == "__main__":
