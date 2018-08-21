@@ -22,7 +22,7 @@ DEFAULT_LOCAL_IP = "127.0.0.1"
 DEFAULT_VM_IP = "172.16.1.2"
 DEFAULT_TCP_PORT = 51951
 DEFAULT_BUFFER_SIZE = 1024
-WORLD_RANGE = {"X":[-0.65,1.55], "Y":[-0.8,0.45]}
+WORLD_RANGE = {"X":[-1.14,1.52], "Y":[-1.0,0.92]}
 FLIGHT_HEIGHT = 0.5
 #########################
 
@@ -49,7 +49,7 @@ class CrazyFlieObject(object):
 		return self._status
 	def getSpeed(self):
 		return self._move_speed
-	def calcDuration(self, distance): # yuval
+	def calcDuration(self, distance):
 		return distance/self._move_speed
 	def getBattery(self):
 		return self._cf.getBattery()
@@ -70,25 +70,24 @@ class CrazyFlieObject(object):
 		real_x, real_y, real_z = self._cf.position()
 		cf_logger.debug("From ({rx}, {ry}, {rz})\nself._cf.goTo(goal = [{x}, {y}, {z}], yaw=0.0, duration={d}, relative=False)".format(x=real_x + (x*self._step_size), y=real_y + (y*self._step_size), z=FLIGHT_HEIGHT, d=self._step_size/self._move_speed, rx=real_x, ry=real_y, rz=real_z)) # XXX
 		self._cf.goTo(goal = [real_x + (x*self._step_size), real_y + (y*self._step_size), FLIGHT_HEIGHT], yaw=0.0, duration=self._step_size/self._move_speed, relative=False)
-		time.sleep(1) # XXX
 	def setSpeed(self, speed):
+		cf_logger.debug("DEBUG Speed set to {}".format(speed)) # XXX
 		self._move_speed = speed
 	def setStepSize(self, step_size):
 		cf_logger.debug("DEBUG Step size set to {}".format(step_size)) # XXX
 		self._step_size = step_size
 
 def _get_objects(args): # args = ["GetObjects"]
-	# TODO
-	tmp_list = ["crazyflie2"]# TODO
-	# TODO
-	for object_name in tmp_list:
+	with open("inventory.txt", "rb") as f:
+		objects = [x.strip() for x in f.readlines()]
+	for object_name in objects:
 		try:
 			KNOWN_CRAZYFLIES[object_name] = CrazyFlieObject(object_name)
 			cf_logger.info("Drone '{}' added".format(object_name))
 		except Exception as e:
 			cf_logger.exception("Failed to create CrazyFlie named: {}".format(object_name))
-	# TODO return "FATAL" on error
-	return "$".join(tmp_list)
+			return "FATAL"
+	return "$".join(objects)
 
 def _battery_status(args): # args = ["BatteryStatus", "crazyflie"]
 	if (len(args) == 2) and (args[1] in KNOWN_CRAZYFLIES):
