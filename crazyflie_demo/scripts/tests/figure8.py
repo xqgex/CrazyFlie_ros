@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys, time, uav_trajectory
-import crazyflie, rospy
+import crazyflie, rospy, tf
 
 def run(drones):
+	print "init node"
 	rospy.init_node('figure8')
-	cfs = [crazyflie.Crazyflie(drone_name, drone_name) for drone_name in drones]
-	for cf in cfs:
+	print "starting"
+	listener = tf.TransformListener()
+	cfs = []
+	for drone_name in drones:
+		cf = crazyflie.Crazyflie(drone_name, listener)
+		cfs.append(cf)
 		cf.setParam("commander/enHighLevel", 1)
 	print("starting")
 	traj1 = uav_trajectory.Trajectory()
@@ -27,5 +32,5 @@ def run(drones):
 		cf.startTrajectory(0, timescale=1.0, reverse=True)
 	time.sleep(traj1.duration * 1.0)
 	for cf in cfs:
-		cf.stop()
+		cf.land(targetHeight=0.0, duration=2.0)
 

@@ -10,7 +10,7 @@ def run(drones):
 	listener = tf.TransformListener()
 	cfs = []
 	for drone_name in drones:
-		cf = crazyflie.Crazyflie(drone_name, drone_name)
+		cf = crazyflie.Crazyflie(drone_name, listener)
 		cfs.append(cf)
 		cf.setParam("commander/enHighLevel", 1)
 		(real_x, real_y, real_z), rot = listener.lookupTransform("/world", "/{}".format(drone_name), rospy.Time(0))
