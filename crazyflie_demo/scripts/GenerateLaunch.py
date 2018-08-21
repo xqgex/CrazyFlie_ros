@@ -14,12 +14,12 @@ def droneNode(current_drone_number, drones_count):
     <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
       <param name="uri" value="$(arg uri{num})" />
       <param name="tf_prefix" value="$(arg frame{num})" />
-      <param name="enable_logging" value="False" />
+      <param name="enable_logging" value="True" />
       <param name="enable_logging_imu" value="False" />
       <param name="enable_logging_temperature" value="False" />
       <param name="enable_logging_magnetic_field" value="False" />
       <param name="enable_logging_pressure" value="False" />
-      <param name="enable_logging_battery" value="False" />
+      <param name="enable_logging_battery" value="True" />
       <param name="enable_logging_packets" value="False" />
       <rosparam>
         genericLogTopics: ["log1"]

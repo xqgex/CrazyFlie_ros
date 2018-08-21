@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import logger, socket, sys, time
+import logger, math, socket, sys, time
 cf_logger = logger.get_logger(__name__) # debug(), info(), warning(), error(), exception(), critical()
 if sys.version_info[0] > 2:
 	cf_logger.warning("Please use Python 2.x")
@@ -29,32 +29,32 @@ FLIGHT_HEIGHT = 0.5
 KNOWN_CRAZYFLIES = {}
 VALID_COMMANDS = {"TakeOff": "_take_off",	"GetObjects": "_get_objects",	"BatteryStatus": "_battery_status",
 		  "GoTo": "_go_to",		"MoveDrone": "_move_drone",	"GetPos": "_get_position",
-		  "Land": "_land",		"WorldSize": "_World_size",	"SetSpeed": "_set_speed"}
+		  "Land": "_land",		"WorldSize": "_world_size",	"SetSpeed": "_set_speed",
+		  				"TakeYourPlace": "_take_place",	"SetStepSize": "_set_step_size"}
 
 class CrazyFlieObject(object):
 	def __init__(self, name):
 		self._name = name
 		self._status = "Landed"
-		self._move_speed = 1
-		self._step_size = 1
+		self._move_speed = 0.2
+		self._step_size = 0.2
 		self._listener = tf.TransformListener()
 		self._cf = crazyflie.Crazyflie(name, self._listener)
 		self._cf.setParam("commander/enHighLevel", 1)
 		self._cf.monitorBattery()
 	def getPosition(self):
 		real_pos = self._cf.position()
-		if real_pos[2] < 0.1:
-			cf_logger.critical("Drone height too low, Aborting...")
-			self.land(landing_duration = 0.5)
-			self._status = "Landed"
 		return [real_pos[0] - WORLD_RANGE["X"][0], real_pos[1] - WORLD_RANGE["Y"][0], real_pos[2]]
 	def getStatus(self):
 		return self._status
+	def getSpeed(self):
+		return self._move_speed
+	def calcDuration(self, distance): # yuval
+		return distance/self._move_speed
 	def getBattery(self):
 		return self._cf.getBattery()
 	def takeOff(self, takeoff_duration = 3):
 		self._cf.takeoff(targetHeight=FLIGHT_HEIGHT, duration=takeoff_duration)
-		time.sleep(takeoff_duration + 0.5)
 		self._status = "Running"
 	def land(self, landing_duration = 1.5):
 		self._cf.land(targetHeight=0.0, duration=landing_duration)
@@ -64,19 +64,22 @@ class CrazyFlieObject(object):
 		except Exception as e:
 			cf_logger.exception("Failed to stop CrazyFlie")
 		self._status = "Landed"
-	def goTo(self, x, y):
-		self._cf.goTo(goal = [x,y,FLIGHT_HEIGHT], yaw=0.0, duration=self._move_speed/self._step_size, relative=False)
+	def goTo(self, x, y, duration=1):
+		self._cf.goTo(goal = [x + WORLD_RANGE["X"][0], y + WORLD_RANGE["Y"][0], FLIGHT_HEIGHT], yaw=0.0, duration=duration, relative=False)
 	def relativeMove(self, x, y):
 		real_x, real_y, real_z = self._cf.position()
-		self._cf.goTo(goal = [real_x + (x*self._step_size), real_y + (y*self._step_size), FLIGHT_HEIGHT], yaw=0.0, duration=self._move_speed/self._step_size, relative=False)
+		cf_logger.debug("From ({rx}, {ry}, {rz})\nself._cf.goTo(goal = [{x}, {y}, {z}], yaw=0.0, duration={d}, relative=False)".format(x=real_x + (x*self._step_size), y=real_y + (y*self._step_size), z=FLIGHT_HEIGHT, d=self._step_size/self._move_speed, rx=real_x, ry=real_y, rz=real_z)) # XXX
+		self._cf.goTo(goal = [real_x + (x*self._step_size), real_y + (y*self._step_size), FLIGHT_HEIGHT], yaw=0.0, duration=self._step_size/self._move_speed, relative=False)
+		time.sleep(1) # XXX
 	def setSpeed(self, speed):
 		self._move_speed = speed
 	def setStepSize(self, step_size):
+		cf_logger.debug("DEBUG Step size set to {}".format(step_size)) # XXX
 		self._step_size = step_size
 
 def _get_objects(args): # args = ["GetObjects"]
 	# TODO
-	tmp_list = ["crazyflie5"]# TODO
+	tmp_list = ["crazyflie2"]# TODO
 	# TODO
 	for object_name in tmp_list:
 		try:
@@ -90,8 +93,7 @@ def _get_objects(args): # args = ["GetObjects"]
 def _battery_status(args): # args = ["BatteryStatus", "crazyflie"]
 	if (len(args) == 2) and (args[1] in KNOWN_CRAZYFLIES):
 		bat = KNOWN_CRAZYFLIES[args[1]].getBattery()
-		cf_logger.debug("Battery of {} is {}".format(args[1], bat))
-		return bat
+		return str(bat)
 	else:
 		return "FATAL"
 
@@ -107,19 +109,39 @@ def _land(args): # args = ["Land", "crazyflie"]
 		KNOWN_CRAZYFLIES[args[1]].land()
 	return
 
+def _take_place(args): # args = ["TakeYourPlace", "crazyflie", "0', "0"]
+	if (len(args) == 4) and (args[1] in KNOWN_CRAZYFLIES) and (KNOWN_CRAZYFLIES[args[1]].getStatus() == "Running"):
+		requested_x = float(args[2])
+		requested_y = float(args[3])
+		cf_logger.debug("Tell {} start game from ({},{})".format(args[1], requested_x, requested_y))
+		try:
+			pos = KNOWN_CRAZYFLIES[args[1]].getPosition()
+			duration = math.hypot(requested_x - pos[0], requested_y - pos[1])
+			duration /= KNOWN_CRAZYFLIES[args[1]].getSpeed()
+			cf_logger.debug("Starting at ({},{}) with duration of {}".format(pos[0], pos[1], duration))
+			KNOWN_CRAZYFLIES[args[1]].goTo(requested_x, requested_y, duration=duration)
+			time.sleep(duration)
+		except Exception as e:
+			cf_logger.exception("Exception occurred")
+	return
+
 def _go_to(args): # args = ["GoTo", "crazyflie", "0', "0"]
 	if (len(args) == 4) and (args[1] in KNOWN_CRAZYFLIES) and (KNOWN_CRAZYFLIES[args[1]].getStatus() == "Running"):
-		cf_logger.debug("Tell {} go to ({},{})".format(args[1],float(args[2]),float(args[3])))
+		pos = KNOWN_CRAZYFLIES[args[1]].getPosition()
+		distance = math.hypot(float(args[2]) - pos[0], float(args[3]) - pos[1])
+		duration = KNOWN_CRAZYFLIES[args[1]].calcDuration(distance)
+		cf_logger.debug("Tell {} go from {} to ({},{}) duration is {}".format(args[1], pos, float(args[2]), float(args[3]), duration )) 
 		try:
-			KNOWN_CRAZYFLIES[args[1]].goTo(float(args[2]),float(args[3]))
+			KNOWN_CRAZYFLIES[args[1]].goTo(float(args[2]), float(args[3]), duration)
 		except Exception as e:
 			cf_logger.exception("Exception occurred")
 	return
 
 def _move_drone(args): # args = ["MoveDrone", "crazyflie", "0.992350", "0.123456"]
 	if (len(args) == 4) and (args[1] in KNOWN_CRAZYFLIES) and (KNOWN_CRAZYFLIES[args[1]].getStatus() == "Running"):
+		cf_logger.debug("Move {} with vector ({}, {})".format(args[1], float(args[2]), float(args[3])))
 		try:
-			KNOWN_CRAZYFLIES[args[1]].relativeMove(float(args[2]),float(args[3]))
+			KNOWN_CRAZYFLIES[args[1]].relativeMove(float(args[2]), float(args[3]))
 		except Exception as e:
 			cf_logger.exception("Exception occurred")
 	return
@@ -127,24 +149,25 @@ def _move_drone(args): # args = ["MoveDrone", "crazyflie", "0.992350", "0.123456
 def _get_position(args): # args = ["GetPos", "crazyflie"]
 	if (len(args) == 2) and (args[1] in KNOWN_CRAZYFLIES):
 		pos = KNOWN_CRAZYFLIES[args[1]].getPosition()
-		cf_logger.debug("The position of {} is {}".format(args[1], pos))
 		return "$".join([str(a) for a in pos])
 	else:
 		return
 
 def _set_speed(args): # args = ["SetSpeed", "6"]
 	if len(args) == 2:
+		cf_logger.debug("Set speed to be {}".format(args[1]))
 		for cf_name, cf_object in KNOWN_CRAZYFLIES.iteritems():
 			cf_object.setSpeed(float(args[1]))
 	return
 
 def _set_step_size(args): # args = ["SetStepSize", "2"]
 	if len(args) == 2:
+		cf_logger.debug("Set step size to be {}".format(args[1]))
 		for cf_name, cf_object in KNOWN_CRAZYFLIES.iteritems():
 			cf_object.setStepSize(float(args[1]))
 	return
 
-def _World_size(args): # args = ["WorldSize"]
+def _world_size(args): # args = ["WorldSize"]
 	size_x = WORLD_RANGE["X"][1] - WORLD_RANGE["X"][0]
 	size_y = WORLD_RANGE["Y"][1] - WORLD_RANGE["Y"][0]
 	return "{}${}".format(size_x, size_y)
@@ -179,7 +202,11 @@ def handleSocket(ip=DEFAULT_VM_IP):
 				break
 			except Exception as e:
 				cf_logger.exception("Exception occurred")
-				continue
+				if e.strerror == "Interrupted system call":
+					cf_logger.warning("Keyboard Interrupt")
+					break
+				else:
+					continue
 			if not data:
 				if KNOWN_CRAZYFLIES: # There are still registered drones
 					for cf_name, cf_object in KNOWN_CRAZYFLIES.iteritems():
@@ -193,7 +220,8 @@ def handleSocket(ip=DEFAULT_VM_IP):
 			if data[0] in VALID_COMMANDS:
 				result = globals()[VALID_COMMANDS[data[0]]](data)
 				if result:
-					cf_logger.info("Send back '{}'".format(result))
+					if data[0] != "GetPos":
+						cf_logger.info("Send back '{}'".format(result))
 					conn.send(result)
 				else:
 					conn.send("\0")

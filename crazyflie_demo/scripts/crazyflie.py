@@ -6,6 +6,9 @@ from crazyflie_driver.srv import *
 from crazyflie_driver.msg import TrajectoryPolynomialPiece
 from std_msgs.msg import Float32
 
+MIN_BATTERY = 2.29
+MAX_BATTERY = 4.04
+
 def arrayToGeometryPoint(a):
     return geometry_msgs.msg.Point(a[0], a[1], a[2])
 
@@ -30,7 +33,7 @@ class Crazyflie:
         self.startTrajectoryService = rospy.ServiceProxy(prefix + "/start_trajectory", StartTrajectory)
         rospy.wait_for_service(prefix + "/update_params")
         self.updateParamsService = rospy.ServiceProxy(prefix + "/update_params", UpdateParams)
-        self.battery = 0
+        self.battery = 0.0
 
     def batteryInfo(self, data):
         self.battery = ( ( data.data - MIN_BATTERY ) / (MAX_BATTERY - MIN_BATTERY) ) * 100
