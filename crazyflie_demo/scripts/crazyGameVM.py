@@ -29,6 +29,7 @@ FLIGHT_HEIGHT = 0.5
 #########################
 
 KNOWN_CRAZYFLIES = {}
+KNOWN_LEDS = []
 VALID_COMMANDS = {
 		  "BatteryStatus":	"_battery_status",
 		  "GetDrones":		"_get_drones",
@@ -75,20 +76,22 @@ def _get_drones(args): # args = ["GetDrones"]
 	return "$".join(drones_name)
 
 def _get_leds(args): # args = ["GetLeds"]
-	with open(INVENTORY_FILE, "rb") as f:
-		objects = [x.strip() for x in f.readlines()]
-	leds_name = []
-	for object_name in objects:
-		if _check_object_type(object_name) == "led":
-			leds_name.append(object_name)
-	return "$".join(leds_name)
+	if len(KNOWN_LEDS) == 0: # You cannot add more leds during the game
+		with open(INVENTORY_FILE, "rb") as f:
+			objects = [x.strip() for x in f.readlines()]
+		for object_name in objects:
+			if _check_object_type(object_name) == "led":
+				KNOWN_LEDS.append(object_name)
+	return "$".join(KNOWN_LEDS)
 
 def _get_position(args): # args = ["GetPos", "crazyflie"]
-	if (len(args) == 2) and (args[1] in KNOWN_CRAZYFLIES):
-		pos = KNOWN_CRAZYFLIES[args[1]].getPosition()
-		return "$".join([str(a) for a in pos])
-	else:
-		return
+	if len(args) == 2:
+		if args[1] in KNOWN_CRAZYFLIES):
+			pos = KNOWN_CRAZYFLIES[args[1]].getPosition()
+			return "$".join([str(a) for a in pos])
+		elif args[1] in KNOWN_LEDS:
+			return "0$0$0" # TODO
+	return
 
 def _go_to(args): # args = ["GoTo", "crazyflie", "0', "0"]
 	if (len(args) == 4) and (args[1] in KNOWN_CRAZYFLIES) and (KNOWN_CRAZYFLIES[args[1]].getStatus() == "Running"):
