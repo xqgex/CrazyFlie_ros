@@ -27,7 +27,7 @@ def droneNode(current_drone_number, drones_count):
         genericLogTopic_log1_Variables: ["stateEstimate.x", "stateEstimate.y", "stateEstimate.z"]
       </rosparam>
     </node>
-    <node name="pose" pkg="crazyflie_demo" type="crazygame_publish_position.py" args="$(arg frame{num})" output="screen"> 
+    <node name="pose" pkg="crazyflie_demo" type="publishPosition.py" args="$(arg frame{num})" output="screen"> 
       <param name="topic" value="/$(arg frame{num})/vrpn_client_node/$(arg frame{num})/pose" />
     </node>
     <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">

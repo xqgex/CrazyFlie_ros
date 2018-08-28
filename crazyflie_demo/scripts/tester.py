@@ -8,14 +8,14 @@ CF_LIST = []
 
 def signal_handler(sig, frame):
 	try:
-		stopAllCrazyFlies()
+		stopAllCrazyflies()
 	finally:
 		print "\nCtrl+C pressed"
 		sys.exit(0)
 
-def stopAllCrazyFlies():
+def stopAllCrazyflies():
 	global CF_LIST
-	for cf in [cfs for cfs in CF_LIST if cfs != None]: # Foreach CrazyFlie
+	for cf in [cfs for cfs in CF_LIST if cfs != None]: # Foreach Crazyflie
 		try:
 			cf.land(targetHeight = 0.0, duration = 1.5)
 			print "{} forced landing".format(cf)
@@ -51,3 +51,4 @@ def main():
 
 if __name__ == '__main__':
 	main()
+
