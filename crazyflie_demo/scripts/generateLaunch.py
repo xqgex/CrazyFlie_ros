@@ -41,18 +41,18 @@ def droneNode(current_drone_number):
   </group>""".format(num=current_drone_number)
 
 def ledNode(current_led_name):
-	return """  <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
+	return """  <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node_{led}" output="screen">
     <rosparam subst_value="true">
       server: $(arg ip)
       port: $(arg port)
       update_frequency: 100.0
       frame_id: /world
-      child_frame_id: /{led}
+      child_frame_id: {led}
       use_server_time: false
       broadcast_tf: true
       refresh_tracker_frequency: 0.0
       trackers:
-      - led1
+      - {led}
     </rosparam>
   </node>""".format(led=current_led_name)
 

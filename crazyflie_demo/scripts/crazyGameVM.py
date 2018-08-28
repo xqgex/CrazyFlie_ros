@@ -45,7 +45,7 @@ VALID_COMMANDS = {
 		  "WorldSize":		"_world_size",
 		}
 
-def _check_object_type(name):
+def _check_object_type(argument):
 	if (len(argument) == 10) and (argument[:9] == "crazyflie") and (48 <= ord(argument[-1]) <= 57):
 		return "drone"
 	elif (len(argument) == 4) and (argument[:3] == "led") and (48 <= ord(argument[-1]) <= 57):
@@ -67,7 +67,7 @@ def _get_drones(args): # args = ["GetDrones"]
 	for object_name in objects:
 		if _check_object_type(object_name) == "drone":
 			try:
-				KNOWN_CRAZYFLIES[object_name] = CrazyflieObject(object_name, WORLD_RANGE["X"][0], WORLD_RANGE["Y"][0])
+				KNOWN_CRAZYFLIES[object_name] = CrazyflieObject(object_name, WORLD_RANGE["X"][0], WORLD_RANGE["Y"][0], FLIGHT_HEIGHT)
 				cf_logger.info("Drone '{}' added".format(object_name))
 				drones_name.append(object_name)
 			except Exception as e:
@@ -82,7 +82,7 @@ def _get_leds(args): # args = ["GetLeds"]
 	for object_name in objects:
 		if _check_object_type(object_name) == "led":
 			try:
-				KNOWN_LEDS[object_name] = Led(object_name)
+				KNOWN_LEDS[object_name] = led.Led(object_name, WORLD_RANGE["X"][0], WORLD_RANGE["Y"][0])
 				cf_logger.info("Led '{}' added".format(object_name))
 				leds_name.append(object_name)
 			except Exception as e:
