@@ -22,6 +22,10 @@ class crazyflie(object):
 	def position(self):
 		return [1,1,1]
 
+class led(object):
+	def position(self):
+		return [1,1,1]
+
 class rospy():
 	@staticmethod
 	def init_node(str_0):
