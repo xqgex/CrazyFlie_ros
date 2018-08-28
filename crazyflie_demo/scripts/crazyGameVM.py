@@ -8,7 +8,7 @@ if sys.version_info[0] > 2:
 	print "If you can see this message, Then you are running Python 3 instead of 2"
 	exit(0)
 try:
-	import crazyflie, rospy, tf
+	import crazyflie, led, rospy, tf
 except:
 	cf_logger.warning("######################################################")
 	cf_logger.warning("####              OFFLINE mode is ON              ####")
@@ -16,7 +16,7 @@ except:
 	cf_logger.warning("#### Warning, You don't have the crazyflie files  ####")
 	cf_logger.warning("#### Loading dummy files for testing purposes     ####")
 	cf_logger.warning("######################################################")
-	from simulator import crazyflie, rospy, tf
+	from simulator import crazyflie, led, rospy, tf
 
 ##### Editable part #####
 DEFAULT_LOCAL_IP = "127.0.0.1"
@@ -29,7 +29,7 @@ FLIGHT_HEIGHT = 0.5
 #########################
 
 KNOWN_CRAZYFLIES = {}
-KNOWN_LEDS = []
+KNOWN_LEDS = {}
 VALID_COMMANDS = {
 		  "BatteryStatus":	"_battery_status",
 		  "GetDrones":		"_get_drones",
@@ -39,7 +39,7 @@ VALID_COMMANDS = {
 		  "Land":		"_land",
 		  "MoveDrone":		"_move_drone",
 		  "SetSpeed":		"_set_speed",
-		  "SetStepSize":	"_set_step_size"
+		  "SetStepSize":	"_set_step_size",
 		  "TakeOff":		"_take_off",
 		  "TakeYourPlace":	"_take_place",
 		  "WorldSize":		"_world_size",
@@ -76,21 +76,28 @@ def _get_drones(args): # args = ["GetDrones"]
 	return "$".join(drones_name)
 
 def _get_leds(args): # args = ["GetLeds"]
-	if len(KNOWN_LEDS) == 0: # You cannot add more leds during the game
-		with open(INVENTORY_FILE, "rb") as f:
-			objects = [x.strip() for x in f.readlines()]
-		for object_name in objects:
-			if _check_object_type(object_name) == "led":
-				KNOWN_LEDS.append(object_name)
-	return "$".join(KNOWN_LEDS)
+	with open(INVENTORY_FILE, "rb") as f:
+		objects = [x.strip() for x in f.readlines()]
+	leds_name = []
+	for object_name in objects:
+		if _check_object_type(object_name) == "led":
+			try:
+				KNOWN_LEDS[object_name] = Led(object_name)
+				cf_logger.info("Led '{}' added".format(object_name))
+				leds_name.append(object_name)
+			except Exception as e:
+				cf_logger.exception("Failed to create Led named: {}".format(object_name))
+				return "FATAL"
+	return "$".join(leds_name)
 
 def _get_position(args): # args = ["GetPos", "crazyflie"]
 	if len(args) == 2:
-		if args[1] in KNOWN_CRAZYFLIES):
+		if args[1] in KNOWN_CRAZYFLIES:
 			pos = KNOWN_CRAZYFLIES[args[1]].getPosition()
 			return "$".join([str(a) for a in pos])
 		elif args[1] in KNOWN_LEDS:
-			return "0$0$0" # TODO
+			pos = KNOWN_LEDS[args[1]].getPosition()
+			return "$".join([str(a) for a in pos])
 	return
 
 def _go_to(args): # args = ["GoTo", "crazyflie", "0', "0"]

@@ -31,7 +31,7 @@ def main(arguments):
 		cf_logger.error("python main.py crazyflie2 crazyflie3")
 		cf_logger.error("Another equivalent usage example is:")
 		cf_logger.error("python main.py 2 3")
-	elif not generateLaunch.generate(LAUNCH_PATH, IP, PORT, drones):
+	elif not generateLaunch.generate(LAUNCH_PATH, IP, PORT, drones, leds):
 		cf_logger.info("Failed to create {}".format(LAUNCH_PATH))
  	else:
 		cf_logger.info("File {} created successfully".format(LAUNCH_PATH))
