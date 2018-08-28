@@ -22,7 +22,7 @@ DEFAULT_LOCAL_IP = "127.0.0.1"
 DEFAULT_VM_IP = "172.16.1.2"
 DEFAULT_TCP_PORT = 51951
 DEFAULT_BUFFER_SIZE = 1024
-WORLD_RANGE = {"X":[-1.14,1.52], "Y":[-1.0,0.92]}
+WORLD_RANGE = {"X":[-1.04,1.42], "Y":[-0.9,0.82]} # {"X":[-1.14,1.52], "Y":[-1.0,0.92]}
 FLIGHT_HEIGHT = 0.5
 #########################
 

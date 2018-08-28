@@ -10,8 +10,12 @@ def run(drones):
 	listener = tf.TransformListener()
 	cfs = []
 	for drone_name in drones:
-		cf = crazyflie.Crazyflie(drone_name, drone_name)
-		cfs.append(cf)
-		cf.setParam("commander/enHighLevel", 1)
-		cf.land(targetHeight=0.0, duration=2.0)
+		try:
+			cf = crazyflie.Crazyflie(drone_name, drone_name)
+			cfs.append(cf)
+			cf.setParam("commander/enHighLevel", 1)
+			cf.land(targetHeight=0.0, duration=2.0)
+			print "Land {}".format(drone_name)
+		except:
+			print "Skip {}".format(drone_name)
 
